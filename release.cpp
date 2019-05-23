@@ -12,8 +12,6 @@
 #include "EEPROM.h"
 
 byte unlockStatus;
-byte callMode;
-
 boolean magic;
 
 ZUNO_SETUP_CHANNELS(ZUNO_SWITCH_BINARY(getLockStatus, setLockStatus));
@@ -26,8 +24,10 @@ void setup()
   magic = EEPROM.read(0x0000) == 0x0A;
   if (!magic) 
   {
+    // magic
     EEPROM.write(0x0000, 0x0A);
-    EEPROM.write(0x000F, 0x00);
+    // unlock status
+    EEPROM.write(0x00FF, 0x00);
   }
 
   pinMode(LED_PIN, OUTPUT);
@@ -40,7 +40,7 @@ void loop()
   digitalWrite(LED_PIN, LOW);
   delay(50);
   
-  unlockStatus = EEPROM.read(0x000F);
+  unlockStatus = EEPROM.read(0x00FF);
 
   if ((unlockStatus != 0) && (digitalRead(CALL_PIN) == LOW))
     vass_unlock_intercom();
@@ -58,12 +58,8 @@ byte getLockStatus()
 }
 void setLockStatus(byte newValue) 
 {
-  if (newValue > 0)
-    unlockStatus = 0xFF;
-  else
-    unlockStatus = 0;
-
-  EEPROM.write(0x000F, unlockStatus > 0 ? 0xFF : 0);
+  unlockStatus = newValue > 0 ? 0xFF : 0;
+  EEPROM.write(0x00FF, unlockStatus);
 }
 
 typedef enum
@@ -143,3 +139,4 @@ void vass_unlock_intercom()
   set_line_relay(con_to_lgnd); 
   set_line_relay(con_to_phn);
 }
+
