@@ -123,15 +123,15 @@ void init_relays()
   pinMode(LGND_RELAY_P_1, OUTPUT);
   pinMode(LGND_RELAY_P_8, OUTPUT);
   set_line_relay(con_to_phn);
-  set_line_relay(con_to_lgnd);
+  set_line_relay(break_lgnd);
 
   pinMode(BU_PC, OUTPUT);
-  relize_phn_but();
 }
 
 void vass_unlock_intercom()
 {
-  push_phn_but();  
+  set_line_relay(con_to_lgnd); 
+
   set_line_relay(pick_up);
   delay(150);
   set_line_relay(break_lgnd);
