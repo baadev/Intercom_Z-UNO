@@ -44,9 +44,12 @@ void loop()
 
   if ((unlockStatus != 0) && (digitalRead(CALL_PIN) == LOW))
     vass_unlock_intercom();
-  else
+  else if (digitalRead(CALL_PIN) == LOW) { 
     init_relays(); 
-
+    return;
+  } else 
+    init_relays();
+    
   digitalWrite(LED_PIN, HIGH);
   zunoSendDeviceToSleep();
 }
