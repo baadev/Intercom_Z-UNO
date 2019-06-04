@@ -14,6 +14,15 @@
 byte unlockStatus;
 boolean magic;
 
+typedef enum
+{
+  con_to_phn = 0,
+  pick_up,
+  con_to_lgnd,
+  break_lgnd    
+} relay_cmd_t;
+
+
 ZUNO_SETUP_CHANNELS(ZUNO_SWITCH_BINARY(getLockStatus, setLockStatus));
 ZUNO_SETUP_SLEEPING_MODE(ZUNO_SLEEPING_MODE_FREQUENTLY_AWAKE);
 
@@ -43,7 +52,7 @@ void loop()
   unlockStatus = EEPROM.read(0x00FF);
 
   if ((unlockStatus != 0) && (digitalRead(CALL_PIN) == LOW))
-    vass_unlock_intercom();
+    unlock_intercom();
   else if (digitalRead(CALL_PIN) == LOW) { 
     init_relays(); 
     return;
@@ -54,24 +63,32 @@ void loop()
   zunoSendDeviceToSleep();
 }
 
-// z-way
-byte getLockStatus() 
+void init_relays()
 {
-  return unlockStatus;
-}
-void setLockStatus(byte newValue) 
-{
-  unlockStatus = newValue > 0 ? 0xFF : 0;
-  EEPROM.write(0x00FF, unlockStatus);
+  pinMode(LINE_RELAY_P_1, OUTPUT);  
+  pinMode(LINE_RELAY_P_8, OUTPUT);
+  pinMode(LGND_RELAY_P_1, OUTPUT);
+  pinMode(LGND_RELAY_P_8, OUTPUT);
+  set_line_relay(con_to_phn);
+  set_line_relay(break_lgnd);
+
+  pinMode(BU_PC, OUTPUT);
 }
 
-typedef enum
+void unlock_intercom()
 {
-  con_to_phn = 0,
-  pick_up,
-  con_to_lgnd,
-  break_lgnd    
-} relay_cmd_t;
+  set_line_relay(con_to_lgnd); 
+
+  set_line_relay(pick_up);
+  delay(150);
+  set_line_relay(break_lgnd);
+  delay(1000);
+  relize_phn_but();
+  delay(200);
+  push_phn_but(); 
+  set_line_relay(con_to_lgnd); 
+  set_line_relay(con_to_phn);
+}
 
 
 void push_phn_but()
@@ -116,30 +133,13 @@ void set_line_relay(byte cmd)
   }
 }
 
-void init_relays()
+// z-way
+byte getLockStatus() 
 {
-  pinMode(LINE_RELAY_P_1, OUTPUT);  
-  pinMode(LINE_RELAY_P_8, OUTPUT);
-  pinMode(LGND_RELAY_P_1, OUTPUT);
-  pinMode(LGND_RELAY_P_8, OUTPUT);
-  set_line_relay(con_to_phn);
-  set_line_relay(break_lgnd);
-
-  pinMode(BU_PC, OUTPUT);
+  return unlockStatus;
 }
-
-void vass_unlock_intercom()
+void setLockStatus(byte newValue) 
 {
-  set_line_relay(con_to_lgnd); 
-
-  set_line_relay(pick_up);
-  delay(150);
-  set_line_relay(break_lgnd);
-  delay(1000);
-  relize_phn_but();
-  delay(200);
-  push_phn_but(); 
-  set_line_relay(con_to_lgnd); 
-  set_line_relay(con_to_phn);
+  unlockStatus = newValue > 0 ? 0xFF : 0;
+  EEPROM.write(0x00FF, unlockStatus);
 }
-
